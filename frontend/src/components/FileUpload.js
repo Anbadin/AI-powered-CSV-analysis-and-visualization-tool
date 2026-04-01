@@ -262,5 +262,5 @@ export default function FileUpload() {
         )}
       </AnimatePresence>
     </div>
-  );
+  );   
 }
