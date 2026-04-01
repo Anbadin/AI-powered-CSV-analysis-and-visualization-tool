@@ -1,0 +1,52 @@
+@import "tailwindcss";
+
+/* --- Global Styles --- */
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  @apply bg-slate-950 text-white;
+}
+
+/* --- Custom Scrollbar (Makes it look Pro) --- */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0a0a0a;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #1e293b; /* Dark slate color */
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #686a6e; /* Blue on hover */
+}
+
+/* --- Drag & Drop Animation --- */
+@keyframes pulse-border {
+  0%, 100% {
+    border-color: #6893d8;
+  }
+  50% {
+    border-color: #2a2d30;
+  }
+}
+
+.drag-active {
+  animation: pulse-border 1s ease-in-out infinite;
+}
+
+/* --- CSV Table Preview Styles --- */
+.table-container::-webkit-scrollbar {
+  height: 6px;
+}
+
+.table-container::-webkit-scrollbar-thumb {
+  background: #334155;
+  border-radius: 3px;
+}
