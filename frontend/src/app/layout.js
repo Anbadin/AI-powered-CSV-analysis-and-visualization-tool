@@ -1,7 +1,7 @@
 import './globals.css';
 
 export const metadata = {
-  title: 'DataStory — Smart Data Story Generator',
+  title: 'SafiNia — Smart Data Story Generator',
   description: 'Upload any CSV file and watch AI turn your raw data into beautiful visualizations and insightful narratives.',
 };
 

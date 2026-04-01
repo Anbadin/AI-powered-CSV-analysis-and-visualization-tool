@@ -1,79 +1,69 @@
-from fastapi import FastAPI, UploadFile, File, HTTPException # type: ignore
-from fastapi.middleware.cors import CORSMiddleware # type: ignore
+from fastapi import FastAPI, UploadFile, File, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from analyzer import analyze_csv
+from narrative import generate_narrative
 
-# Create the FastAPI app
 app = FastAPI(
-    title="DataStory API",
+    title="SafiNia API",
     description="AI-powered CSV analysis backend",
-    version="1.0.0",
+    version="2.0.0",
 )
 
-# Allow our React frontend to talk to this backend
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "http://localhost:3000",     # Next.js dev server
-        "http://127.0.0.1:3000",    # Alternative localhost
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
     ],
     allow_credentials=True,
-    allow_methods=["*"],            # Allow all HTTP methods
-    allow_headers=["*"],            # Allow all headers
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
+
+
+# Store the latest analysis in memory (for narrative generation)
+latest_analysis = {}
+
 
 @app.get("/")
 def root():
-    """Health check endpoint."""
     return {
         "status": "running",
-        "message": "DataStory API is live! 🚀",
-        "docs": "Visit /docs for API documentation",
+        "message": "SafiNia API is live! 🚀",
+        "version": "2.0.0",
     }
+
 
 @app.post("/upload")
 async def upload_csv(file: UploadFile = File(...)):
-    """
-    Upload a CSV file and get initial analysis.
-    """
+    """Upload a CSV file and get ML analysis."""
+    global latest_analysis
     
-    # Validate file type
     if not file.filename.lower().endswith('.csv'):
-        raise HTTPException(
-            status_code=400, 
-            detail="Only CSV files are accepted."
-        )
+        raise HTTPException(status_code=400, detail="Only CSV files are accepted.")
     
-    # Read file contents
     contents = await file.read()
     size_mb = len(contents) / (1024 * 1024)
     
-    # Validate file size (10MB max)
     if size_mb > 10:
-        raise HTTPException(
-            status_code=400, 
-            detail=f"File too large ({size_mb:.1f}MB). Maximum is 10MB."
-        )
+        raise HTTPException(status_code=400, detail=f"File too large ({size_mb:.1f}MB). Maximum is 10MB.")
     
-    # Decode the file bytes to text
     try:
         file_content = contents.decode('utf-8')
     except UnicodeDecodeError:
         try:
             file_content = contents.decode('latin-1')
         except Exception:
-            raise HTTPException(
-                status_code=400,
-                detail="Could not read file. Please ensure it's a valid CSV."
-            )
+            raise HTTPException(status_code=400, detail="Could not read file.")
     
-    # Run our analysis!
     result = analyze_csv(file_content)
     
-    # Check for analysis errors
     if "error" in result:
         raise HTTPException(status_code=400, detail=result["error"])
     
-    # Return successful results
+    # Store for narrative generation
+    latest_analysis = result
+    
     return {
         "message": "File analyzed successfully! ✅",
         "filename": file.filename,
@@ -81,7 +71,22 @@ async def upload_csv(file: UploadFile = File(...)):
         "analysis": result,
     }
 
-# This allows running with: python main.py
+
+@app.post("/narrative")
+async def get_narrative():
+    """Generate AI narrative from the latest analysis."""
+    global latest_analysis
+    
+    if not latest_analysis:
+        raise HTTPException(status_code=400, detail="No analysis data found. Upload a CSV first.")
+    
+    narrative = generate_narrative(latest_analysis)
+    
+    return {
+        "narrative": narrative,
+    }
+
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)

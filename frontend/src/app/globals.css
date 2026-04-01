@@ -6,7 +6,8 @@ html {
 }
 
 body {
-  @apply bg-slate-950 text-white;
+  /* For your dark floating cards */
+  @apply bg-[#121212] text-gray-400;  
 }
 
 /* --- Custom Scrollbar (Makes it look Pro) --- */
@@ -28,17 +29,14 @@ body {
 }
 
 /* --- Drag & Drop Animation --- */
-@keyframes pulse-border {
-  0%, 100% {
-    border-color: #6893d8;
-  }
-  50% {
-    border-color: #2a2d30;
-  }
+@keyframes pulse-fuchsia {
+  0%, 100% { border-color: #d946ef; }
+  50% { border-color: #ffffff; }
 }
 
 .drag-active {
-  animation: pulse-border 1s ease-in-out infinite;
+  animation: pulse-fuchsia 1.2s ease-in-out infinite;
+  background-color: #1e1f26 !important; /* Slightly darker charcoal when dragging */
 }
 
 /* --- CSV Table Preview Styles --- */

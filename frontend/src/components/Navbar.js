@@ -1,7 +1,6 @@
 'use client';
 
-// Change "Github" to "Terminal" (or "LayoutGrid")
-import { BarChart3, Terminal } from 'lucide-react';
+import { BarChart3, Bot } from 'lucide-react';
 
 export default function Navbar() {
   return (
@@ -10,31 +9,30 @@ export default function Navbar() {
         
         {/* Logo */}
         <div className="flex items-center gap-2">
-          <div className="bg-blue-600 p-1.5 rounded-lg">
+          <div className="bg-fuchsia-600 p-1.5 rounded-lg">
             <BarChart3 size={20} className="text-white" />
           </div>
           <span className="text-xl font-bold text-white">
-            Data<span className="text-blue-400">Story</span>
+            Safi<span className="text-fuchsia-400">Nia</span>
           </span>
         </div>
 
         {/* Right side */}
         <div className="flex items-center gap-4">
-          <span className="text-gray-500 text-sm hidden sm:block font-mono">
-            AI-Powered Analysis
+          <span className="text-gray-500 text-sm hidden sm:block">
+            AI-Powered Data Analysis
           </span>
           <a
-            href="https://github.com"
+            href="https://github.com/Anbadin/AI-powered-CSV-analysis-and-visualization-tool"
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-1.5 text-gray-400 
                        hover:text-white transition-colors text-sm
                        border border-gray-800 px-3 py-1.5 rounded-lg
-                       hover:border-gray-600 bg-gray-900/50"
+                       hover:border-gray-600"
           >
-            {/* Use the Terminal icon here instead of Github */}
-            <Terminal size={18} />
-            <span className="hidden sm:inline">Source Code</span>
+            <Bot size={16} />
+            <span className="hidden sm:inline">GitHub</span>
           </a>
         </div>
 

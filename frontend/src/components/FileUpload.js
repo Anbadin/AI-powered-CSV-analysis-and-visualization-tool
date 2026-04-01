@@ -1,22 +1,25 @@
 'use client';
-import Dashboard from './Dashboard';
+import SampleData from './SampleData';
 
 import { useCallback, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Upload, FileSpreadsheet, AlertCircle } from 'lucide-react';
+import { Upload, FileSpreadsheet, AlertCircle, Loader2 } from 'lucide-react';
 import FilePreview from './FilePreview';
+import Dashboard from './Dashboard';
 
 export default function FileUpload() {
   const [file, setFile] = useState(null);
   const [preview, setPreview] = useState(null);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [analysisResult, setAnalysisResult] = useState(null);
 
   const onDrop = useCallback((acceptedFiles, rejectedFiles) => {
     setError('');
     setPreview(null);
     setFile(null);
+    setAnalysisResult(null);
 
     if (rejectedFiles && rejectedFiles.length > 0) {
       const rejection = rejectedFiles[0];
@@ -92,9 +95,8 @@ export default function FileUpload() {
     setFile(null);
     setPreview(null);
     setError('');
+    setAnalysisResult(null);
   };
-
-  const [analysisResult, setAnalysisResult] = useState(null);
 
   const handleAnalyze = async () => {
     if (!file) return;
@@ -118,9 +120,6 @@ export default function FileUpload() {
       }
 
       const data = await response.json();
-      console.log('✅ Full Analysis Result:', data);
-      
-      // Save results to state
       setAnalysisResult(data.analysis);
       
     } catch (err) {
@@ -142,55 +141,131 @@ export default function FileUpload() {
   });
 
   return (
-    <div>
+    <div className="mb-20 max-w-5xl mx-auto px-4">
       <AnimatePresence mode="wait">
         
-        {/* Upload Box */}
+        {/* ===== INVERSE PREMIUM UPLOAD BOX ===== */}
         {!preview && !isLoading && !analysisResult && (
           <motion.div
             key="upload"
-            initial={{ opacity: 0, scale: 0.95 }}
+            initial={{ opacity: 0, scale: 0.98 }}
             animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
+            exit={{ opacity: 0, scale: 0.98 }}
+            transition={{ duration: 0.4 }}
           >
             <div
               {...getRootProps()}
-              className={`border-2 border-dashed rounded-2xl p-16 text-center transition-all duration-300 cursor-pointer group
-                ${isDragActive ? 'border-blue-500 bg-blue-500/5 drag-active' : 'border-gray-700 hover:border-blue-500/50 hover:bg-gray-900/50'}`}
+              className={`relative border-2 border-dashed rounded-[2.5rem] p-16 
+                         text-center transition-all duration-500 cursor-pointer group shadow-2xl
+                         bg-[#2C2E39] 
+                         ${isDragActive 
+                           ? 'border-white scale-[1.02] drag-active' 
+                           : 'border-fuchsia-500 hover:border-white hover:bg-[#343744]'
+                         }`}
             >
               <input {...getInputProps()} />
-              <div className="text-5xl mb-4">{isDragActive ? '🎯' : '📁'}</div>
-              <p className="text-xl text-gray-300 mb-2">
-                {isDragActive ? 'Drop it right here!' : 'Drag & Drop your CSV file here'}
-              </p>
-              <p className="text-gray-500">or <span className="text-blue-400 underline">click to browse</span></p>
+              
+              <div className="flex flex-col items-center">
+                {/* Cream Icon Box */}
+                <motion.div 
+                  animate={isDragActive ? { y: -10 } : { y: 0 }}
+                  className="bg-[#FFFDF2] p-6 rounded-[1.5rem] mb-8 shadow-xl"
+                >
+                  {isDragActive 
+                    ? <FileSpreadsheet size={48} className="text-fuchsia-600 animate-bounce" />
+                    : <Upload size={48} className="text-fuchsia-600 transition-transform group-hover:-translate-y-1" />
+                  }
+                </motion.div>
+
+                <h3 className="text-3xl font-black text-white mb-4 tracking-tight">
+                  {isDragActive ? '🎯 Release to Start' : 'Drag & Drop your CSV file here'}
+                </h3>
+                
+                <p className="text-gray-300 text-lg mb-8 font-medium">
+                  or <span className="text-fuchsia-400 underline underline-offset-8 decoration-2 hover:text-white transition-colors">click to browse</span> files
+                </p>
+
+                <div className="flex gap-6 text-[11px] uppercase tracking-[0.3em] font-bold text-gray-500">
+                  <span className="flex items-center gap-2">Max: 10MB</span>
+                  <span className="text-fuchsia-500/50">•</span>
+                  <span className="flex items-center gap-2">Format: CSV</span>
+                </div>
+              </div>
             </div>
+
+            {/* ===== SAMPLE DATA BUTTON (NEW! 👇) ===== */}
+            <SampleData onLoadSample={(sampleFile) => {
+              setFile(sampleFile);
+              const reader = new FileReader();
+              reader.onload = (e) => {
+                const text = e.target.result;
+                const allLines = text.split('\n').filter(line => line.trim() !== '');
+                const headers = allLines[0].split(',').map(h => h.trim().replace(/"/g, ''));
+                const dataLines = allLines.slice(1);
+                const sampleRows = dataLines.slice(0, 5).map(line =>
+                  line.split(',').map(cell => cell.trim().replace(/"/g, ''))
+                );
+                setPreview({
+                  fileName: sampleFile.name,
+                  fileSize: (sampleFile.size / 1024).toFixed(1) + ' KB',
+                  totalRows: dataLines.length,
+                  totalColumns: headers.length,
+                  headers,
+                  sampleRows,
+                  rawFile: sampleFile,
+                });
+              };
+              reader.readAsText(sampleFile);
+            }} />
+
           </motion.div>
         )}
 
-        {/* Loading */}
+        {/* ===== LOADING STATE ===== */}
         {isLoading && (
-          <motion.div key="loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-20">
-            <div className="animate-spin text-4xl mb-4">⚙️</div>
-            <p className="text-gray-300">Running ML analysis...</p>
-            <p className="text-gray-500 text-sm mt-2">Detecting patterns, anomalies & trends</p>
+          <motion.div
+            key="loading"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="flex flex-col items-center justify-center py-32 bg-[#2C2E39] rounded-[2.5rem] border border-fuchsia-500/20"
+          >
+            <Loader2 className="w-16 h-16 text-fuchsia-500 animate-spin mb-6" />
+            <h3 className="text-2xl font-bold text-white">AI Analyzing...</h3>
+            <p className="text-gray-400 mt-2">Turning rows into narratives</p>
           </motion.div>
         )}
 
-        {/* Preview (before analysis) */}
-        {preview && !analysisResult && (
-          <motion.div key="preview" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-            <FilePreview preview={preview} onRemove={removeFile} onAnalyze={handleAnalyze} />
+        {/* ===== FILE PREVIEW ===== */}
+        {preview && !analysisResult && !isLoading && (
+          <motion.div
+            key="preview"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+          >
+            <FilePreview 
+              preview={preview} 
+              onRemove={removeFile} 
+              onAnalyze={handleAnalyze} 
+            />
           </motion.div>
         )}
 
-        {/* DASHBOARD (after analysis) */}
+        {/* ===== DASHBOARD ===== */}
         {analysisResult && (
-          <motion.div key="dashboard" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+          <motion.div
+            key="dashboard"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+          >
             <Dashboard analysis={analysisResult} />
             <button
               onClick={removeFile}
-              className="mt-6 w-full bg-gray-800 hover:bg-gray-700 text-white py-3 rounded-xl transition"
+              className="mt-12 w-full bg-[#2C2E39] hover:bg-[#343744] text-white py-5 
+                         rounded-2xl font-bold transition-all duration-300
+                         border-2 border-fuchsia-500 shadow-xl uppercase tracking-widest text-xs
+                         hover:shadow-fuchsia-500/20 active:scale-[0.98]"
             >
               🔄 Analyze Another File
             </button>
@@ -199,11 +274,22 @@ export default function FileUpload() {
 
       </AnimatePresence>
 
-      {error && (
-        <div className="mt-4 bg-red-500/10 border border-red-500/30 text-red-400 px-4 py-3 rounded-xl flex items-center gap-2">
-          ⚠️ {error}
-        </div>
-      )}
+      {/* ===== ERROR MESSAGE ===== */}
+      <AnimatePresence>
+        {error && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            className="mt-6 bg-red-500/10 border-2 border-red-500/50 
+                       text-red-400 px-6 py-4 rounded-2xl 
+                       flex items-center gap-3 font-bold"
+          >
+            <AlertCircle size={20} />
+            {error}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
-  ); 
-}   
+  );
+}
