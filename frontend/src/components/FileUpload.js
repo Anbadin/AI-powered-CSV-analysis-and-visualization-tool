@@ -1,4 +1,5 @@
 'use client';
+import Dashboard from './Dashboard';
 
 import { useCallback, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
@@ -93,54 +94,38 @@ export default function FileUpload() {
     setError('');
   };
 
-    const handleAnalyze = async () => {
+  const [analysisResult, setAnalysisResult] = useState(null);
+
+  const handleAnalyze = async () => {
     if (!file) return;
     
     setIsLoading(true);
     setError('');
+    setAnalysisResult(null);
 
     try {
-      // Step 1: Put the file in a FormData package
       const formData = new FormData();
       formData.append('file', file);
 
-      // Step 2: Send it to our Python backend
       const response = await fetch('http://localhost:8000/upload', {
         method: 'POST',
         body: formData,
       });
 
-      // Step 3: Check if the server returned an error
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.detail || 'Analysis failed');
       }
 
-      // Step 4: Get the results
       const data = await response.json();
-      console.log('Analysis Result:', data);
+      console.log('✅ Full Analysis Result:', data);
       
-      // Show success (tomorrow we'll build a real dashboard!)
-      alert(
-        `✅ Analysis Complete!\n\n` +
-        `📄 File: ${data.filename}\n` +
-        `📏 Size: ${data.size}\n` +
-        `📊 Rows: ${data.analysis.basic_info.total_rows}\n` +
-        `📋 Columns: ${data.analysis.basic_info.total_columns}\n` +
-        `❌ Missing Cells: ${data.analysis.basic_info.missing_cells}\n` +
-        `📑 Duplicates: ${data.analysis.basic_info.duplicate_rows}\n\n` +
-        `Column Types:\n` +
-        Object.entries(data.analysis.column_types)
-          .map(([col, type]) => `  ${col}: ${type}`)
-          .join('\n') +
-        `\n\nCheck browser console (F12) for full results!`
-      );
+      // Save results to state
+      setAnalysisResult(data.analysis);
       
     } catch (err) {
       console.error('Analysis Error:', err);
-      setError(
-        err.message || 'Failed to analyze file. Is the backend running on port 8000?'
-      );
+      setError(err.message || 'Failed to analyze file. Is backend running?');
     } finally {
       setIsLoading(false);
     }
@@ -157,110 +142,68 @@ export default function FileUpload() {
   });
 
   return (
-    <div className="mb-12">
+    <div>
       <AnimatePresence mode="wait">
         
-        {/* ===== UPLOAD BOX ===== */}
-        {!preview && !isLoading && (
+        {/* Upload Box */}
+        {!preview && !isLoading && !analysisResult && (
           <motion.div
             key="upload"
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
-            transition={{ duration: 0.3 }}
           >
             <div
               {...getRootProps()}
-              className={`border-2 border-dashed rounded-2xl p-16 
-                         text-center transition-all duration-300 
-                         cursor-pointer group
-                         ${isDragActive 
-                           ? 'border-blue-500 bg-blue-500/5 drag-active' 
-                           : 'border-gray-700 hover:border-blue-500/50 hover:bg-gray-900/50'
-                         }`}
+              className={`border-2 border-dashed rounded-2xl p-16 text-center transition-all duration-300 cursor-pointer group
+                ${isDragActive ? 'border-blue-500 bg-blue-500/5 drag-active' : 'border-gray-700 hover:border-blue-500/50 hover:bg-gray-900/50'}`}
             >
               <input {...getInputProps()} />
-              
-              <motion.div
-                animate={isDragActive ? { scale: 1.1, y: -5 } : { scale: 1, y: 0 }}
-                transition={{ duration: 0.2 }}
-              >
-                <div className={`inline-flex p-4 rounded-2xl mb-4 
-                                ${isDragActive 
-                                  ? 'bg-blue-500/20' 
-                                  : 'bg-gray-800 group-hover:bg-gray-700'}`}
-                >
-                  {isDragActive 
-                    ? <FileSpreadsheet size={40} className="text-blue-400" />
-                    : <Upload size={40} className="text-gray-400 group-hover:text-blue-400 transition-colors" />
-                  }
-                </div>
-              </motion.div>
-
-              <p className="text-xl text-gray-300 mb-2 font-medium">
-                {isDragActive
-                  ? '🎯 Drop it right here!'
-                  : 'Drag & Drop your CSV file here'}
+              <div className="text-5xl mb-4">{isDragActive ? '🎯' : '📁'}</div>
+              <p className="text-xl text-gray-300 mb-2">
+                {isDragActive ? 'Drop it right here!' : 'Drag & Drop your CSV file here'}
               </p>
-              <p className="text-gray-500 mb-4">
-                or <span className="text-blue-400 underline">click to browse</span> files
-              </p>
-              <p className="text-gray-600 text-sm">
-                Supports .csv files up to 10MB
-              </p>
+              <p className="text-gray-500">or <span className="text-blue-400 underline">click to browse</span></p>
             </div>
           </motion.div>
         )}
 
-        {/* ===== LOADING STATE ===== */}
+        {/* Loading */}
         {isLoading && (
-          <motion.div
-            key="loading"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="border-2 border-gray-700 rounded-2xl p-16 text-center"
-          >
+          <motion.div key="loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-20">
             <div className="animate-spin text-4xl mb-4">⚙️</div>
-            <p className="text-gray-300">Reading your file...</p>
+            <p className="text-gray-300">Running ML analysis...</p>
+            <p className="text-gray-500 text-sm mt-2">Detecting patterns, anomalies & trends</p>
           </motion.div>
         )}
 
-        {/* ===== FILE PREVIEW ===== */}
-        {preview && (
-          <motion.div
-            key="preview"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.4 }}
-          >
-            <FilePreview 
-              preview={preview} 
-              onRemove={removeFile} 
-              onAnalyze={handleAnalyze} 
-            />
+        {/* Preview (before analysis) */}
+        {preview && !analysisResult && (
+          <motion.div key="preview" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+            <FilePreview preview={preview} onRemove={removeFile} onAnalyze={handleAnalyze} />
+          </motion.div>
+        )}
+
+        {/* DASHBOARD (after analysis) */}
+        {analysisResult && (
+          <motion.div key="dashboard" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+            <Dashboard analysis={analysisResult} />
+            <button
+              onClick={removeFile}
+              className="mt-6 w-full bg-gray-800 hover:bg-gray-700 text-white py-3 rounded-xl transition"
+            >
+              🔄 Analyze Another File
+            </button>
           </motion.div>
         )}
 
       </AnimatePresence>
 
-      {/* ===== ERROR MESSAGE ===== */}
-      <AnimatePresence>
-        {error && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            className="mt-4 bg-red-500/10 border border-red-500/30 
-                       text-red-400 px-4 py-3 rounded-xl 
-                       flex items-center gap-2"
-          >
-            <AlertCircle size={18} />
-            {error}
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {error && (
+        <div className="mt-4 bg-red-500/10 border border-red-500/30 text-red-400 px-4 py-3 rounded-xl flex items-center gap-2">
+          ⚠️ {error}
+        </div>
+      )}
     </div>
-  );   
+  ); 
 }   
