@@ -26,8 +26,8 @@ app.add_middleware(
         "http://localhost:3000",
         "http://127.0.0.1:3000",
         FRONTEND_URL,
-        "https://safinia-83ojne3qd-anbadins-projects.vercel.app/",                    # ← YOUR VERCEL URL
-        "https://safinia-git-main-anbadins-projects.vercel.app",  # ← Vercel preview URLs
+        "https://safinia.vercel.app",                    # ← YOUR VERCEL URL
+        "https://safinia-lgli98ecs-anbadins-projects.vercel.app",  # ← Vercel preview URLs
         "https://*.vercel.app",                          # ← Allow all Vercel subdomains
     ],
     allow_credentials=True,
