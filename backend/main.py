@@ -17,19 +17,10 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# ─── CORS — Single configuration with all allowed origins ───
-FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:3000")
-
+# ─── CORS — Allow all origins (you can restrict later) ───
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000",
-        "http://127.0.0.1:3000",
-        FRONTEND_URL,
-        "https://safinia.vercel.app",                    # ← YOUR VERCEL URL
-        "https://safinia-lgli98ecs-anbadins-projects.vercel.app",  # ← Vercel preview URLs
-        "https://*.vercel.app",                          # ← Allow all Vercel subdomains
-    ],
+    allow_origins=["*"],  # Allow all for now
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
