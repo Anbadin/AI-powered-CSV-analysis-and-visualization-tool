@@ -1,4 +1,5 @@
 'use client';
+
 import StatsOverview from './StatsOverview';
 import ColumnBadges from './ColumnBadges';
 import { motion } from 'framer-motion';
@@ -24,12 +25,14 @@ const tooltipStyle = {
 
 // Formatters preserved exactly from your code
 const formatNumber = (num) => {
+  if (!num) return '$0';
   if (num >= 1000000) return `$${(num / 1000000).toFixed(1)}M`;
   if (num >= 1000) return `$${(num / 1000).toFixed(1)}K`;
   return `$${num.toFixed(0)}`;
 };
 
 const formatPlain = (num) => {
+  if (!num) return '0';
   if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`;
   if (num >= 1000) return `${(num / 1000).toFixed(1)}K`;
   return num.toFixed(0);
@@ -52,9 +55,24 @@ const CustomTooltip = ({ active, payload, label }) => {
 };
 
 export default function Dashboard({ analysis }) {
-  if (!analysis) return null;
+  // Debug log
+  console.log('Dashboard received:', analysis);
 
-  const { correlations, anomalies, trends, basic_info, chart_data } = analysis;
+  // Safety check
+  if (!analysis) {
+    return (
+      <div className="text-center py-10">
+        <p className="text-gray-400">No analysis data available.</p>
+      </div>
+    );
+  }
+
+  // Safe destructuring with defaults
+  const correlations = analysis.correlations || { pairs: [] };
+  const anomalies = analysis.anomalies || { count: 0, percentage: 0, rows: [] };
+  const trends = analysis.trends || [];
+  const basic_info = analysis.basic_info || {};
+  const chart_data = analysis.chart_data || {};
 
   return (
     <motion.div
@@ -64,7 +82,7 @@ export default function Dashboard({ analysis }) {
       transition={{ duration: 0.5 }}
       className="space-y-6"
     >
-            {/* ===== HEADER ===== */}
+      {/* ===== HEADER ===== */}
       <div className="bg-gradient-to-r from-fuchsia-600 to-pink-600 rounded-2xl p-6 text-white">
         <div className="flex justify-between items-start">
           <div>
@@ -77,10 +95,10 @@ export default function Dashboard({ analysis }) {
       </div>
 
       {/* ===== STATS OVERVIEW ===== */}
-      <StatsOverview basicInfo={basic_info} columnTypes={analysis.column_types} />
+      <StatsOverview basicInfo={basic_info} columnTypes={analysis.column_types || {}} />
 
       {/* ===== COLUMN BADGES ===== */}
-      <ColumnBadges columnTypes={analysis.column_types} />
+      <ColumnBadges columnTypes={analysis.column_types || {}} />
       
       {/* ===== ML INSIGHTS STRIP ===== */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -92,7 +110,7 @@ export default function Dashboard({ analysis }) {
             </div>
             <h3 className="font-bold text-white uppercase tracking-widest text-[10px]">Correlations</h3>
           </div>
-          {correlations.pairs.length > 0 ? (
+          {correlations.pairs && correlations.pairs.length > 0 ? (
             <div className="space-y-2">
               {correlations.pairs.slice(0, 3).map((pair, i) => (
                 <div key={i} className="text-xs text-gray-300 bg-black/20 p-2 rounded-lg border border-white/5">
@@ -115,8 +133,10 @@ export default function Dashboard({ analysis }) {
             </div>
             <h3 className="font-bold text-white uppercase tracking-widest text-[10px]">Anomalies</h3>
           </div>
-          <div className="text-3xl font-bold text-white mb-1">{anomalies.count}</div>
-          <p className="text-gray-400 text-[10px] font-bold uppercase tracking-wider">{anomalies.percentage}% flagged unusual</p>
+          <div className="text-3xl font-bold text-white mb-1">{anomalies.count || 0}</div>
+          <p className="text-gray-400 text-[10px] font-bold uppercase tracking-wider">
+            {anomalies.percentage || 0}% flagged unusual
+          </p>
         </div>
 
         {/* Trends */}
@@ -127,11 +147,11 @@ export default function Dashboard({ analysis }) {
             </div>
             <h3 className="font-bold text-white uppercase tracking-widest text-[10px]">Trends</h3>
           </div>
-          {trends.length > 0 ? (
+          {trends && trends.length > 0 ? (
             <div className="space-y-2">
               {trends.slice(0, 2).map((trend, i) => (
                 <div key={i} className="text-xs text-gray-300 bg-black/20 p-2 rounded-lg border border-white/5">
-                  {trend.emoji} {trend.value_column} {trend.direction}
+                  {trend.emoji || '📈'} {trend.value_column} {trend.direction}
                   <span className="text-fuchsia-500/50 ml-1 font-mono">(R²={trend.r_squared})</span>
                 </div>
               ))}
@@ -140,20 +160,20 @@ export default function Dashboard({ analysis }) {
         </div>
       </div>
 
-      <NarrativeCard />
+      <NarrativeCard analysis={analysis} />
 
       {/* ===== CHARTS SECTION ===== */}
-      {chart_data && (
+      {chart_data && Object.keys(chart_data).length > 0 && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           
           {/* Revenue by Item */}
-          {chart_data.revenue_by_item && (
+          {chart_data.revenue_by_item && chart_data.revenue_by_item.data && chart_data.revenue_by_item.data.length > 0 && (
             <ChartCard title={chart_data.revenue_by_item.title} subtitle={chart_data.revenue_by_item.subtitle} fullWidth>
               <ResponsiveContainer width="100%" height={300}>
                 <BarChart data={chart_data.revenue_by_item.data} margin={{ bottom: 60 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#ffffff05" vertical={false} />
                   <XAxis dataKey="name" stroke="#4b5563" tick={{ fontSize: 10, fill: '#D946EF', fontWeight: 600 }} angle={-35} textAnchor="end" height={70} />
-                  <YAxis stroke="#4b5563" tick={{ fontSize: 10,fill: '#D946EF' }} tickFormatter={formatNumber} />
+                  <YAxis stroke="#4b5563" tick={{ fontSize: 10, fill: '#D946EF' }} tickFormatter={formatNumber} />
                   <Tooltip content={({ active, payload, label }) => {
                     if (!active || !payload) return null;
                     const data = payload[0]?.payload;
@@ -175,11 +195,11 @@ export default function Dashboard({ analysis }) {
           )}
 
           {/* Units Sold by Item */}
-          {chart_data.units_by_item && (
+          {chart_data.units_by_item && chart_data.units_by_item.data && chart_data.units_by_item.data.length > 0 && (
             <ChartCard title={chart_data.units_by_item.title}>
               <ResponsiveContainer width="100%" height={250}>
                 <BarChart data={chart_data.units_by_item.data} layout="vertical" margin={{ left: 20 }}>
-                  <XAxis type="number" stroke="#4b5563" tick={{ fontSize: 10,fill: '#D946EF' }} />
+                  <XAxis type="number" stroke="#4b5563" tick={{ fontSize: 10, fill: '#D946EF' }} />
                   <YAxis dataKey="name" type="category" stroke="#4b5563" tick={{ fontSize: 10, fill: '#D946EF', fontWeight: 600 }} width={80} />
                   <Tooltip content={({ active, payload, label }) => {
                     if (!active || !payload) return null;
@@ -199,12 +219,12 @@ export default function Dashboard({ analysis }) {
           )}
 
           {/* Category Breakdown */}
-          {chart_data.category_breakdown && (
+          {chart_data.category_breakdown && chart_data.category_breakdown.data && chart_data.category_breakdown.data.length > 0 && (
             <ChartCard title={chart_data.category_breakdown.title}>
               <ResponsiveContainer width="100%" height={250}>
                 <BarChart data={chart_data.category_breakdown.data}>
                   <XAxis dataKey="name" stroke="#4b5563" tick={{ fontSize: 11, fill: '#D946EF', fontWeight: 600 }} />
-                  <YAxis stroke="#4b5563" tick={{ fontSize: 10 ,fill: '#D946EF' }} tickFormatter={formatNumber} />
+                  <YAxis stroke="#4b5563" tick={{ fontSize: 10, fill: '#D946EF' }} tickFormatter={formatNumber} />
                   <Tooltip content={({ active, payload, label }) => {
                     if (!active || !payload) return null;
                     const data = payload[0]?.payload;
@@ -226,7 +246,7 @@ export default function Dashboard({ analysis }) {
 
           {/* Time Series */}
           {chart_data && Object.entries(chart_data)
-            .filter(([_, val]) => val.type === 'timeseries')
+            .filter(([_, val]) => val && val.type === 'timeseries' && val.data && val.data.length > 0)
             .slice(0, 2)
             .map(([key, chartInfo]) => (
               <ChartCard key={key} title={chartInfo.title} fullWidth>
@@ -234,7 +254,7 @@ export default function Dashboard({ analysis }) {
                   <LineChart data={chartInfo.data}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#ffffff05" vertical={false} />
                     <XAxis dataKey="date" stroke="#4b5563" tick={{ fontSize: 10, fill: '#D946EF', fontWeight: 600 }} />
-                    <YAxis stroke="#4b5563" tick={{ fontSize: 10,fill: '#D946EF'  }} />
+                    <YAxis stroke="#4b5563" tick={{ fontSize: 10, fill: '#D946EF' }} />
                     <Tooltip content={({ active, payload }) => {
                       if (!active || !payload?.length) return null;
                       const data = payload[0]?.payload;
@@ -252,13 +272,13 @@ export default function Dashboard({ analysis }) {
             ))}
 
           {/* Scatter Plot */}
-          {chart_data.scatter && (
+          {chart_data.scatter && chart_data.scatter.data && chart_data.scatter.data.length > 0 && (
             <ChartCard title={chart_data.scatter.title}>
               <ResponsiveContainer width="100%" height={250}>
                 <ScatterChart margin={{ bottom: 10 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#ffffff05" />
                   <XAxis dataKey="x" name={chart_data.scatter.x_label} stroke="#4b5563" tick={{ fontSize: 10, fill: '#D946EF', fontWeight: 600 }} />
-                  <YAxis dataKey="y" name={chart_data.scatter.y_label} stroke="#4b5563" tick={{ fontSize: 10,fill: '#D946EF'  }} />
+                  <YAxis dataKey="y" name={chart_data.scatter.y_label} stroke="#4b5563" tick={{ fontSize: 10, fill: '#D946EF' }} />
                   <Tooltip content={({ active, payload }) => {
                     if (!active || !payload?.length) return null;
                     const data = payload[0]?.payload;
@@ -280,15 +300,15 @@ export default function Dashboard({ analysis }) {
 
           {/* Distribution Histogram */}
           {chart_data && Object.entries(chart_data)
-            .filter(([_, val]) => val.type === 'distribution')
+            .filter(([_, val]) => val && val.type === 'distribution' && val.data && val.data.length > 0)
             .slice(0, 2)
             .map(([key, chartInfo]) => (
-              <ChartCard key={key} title={chartInfo.title} subtitle={`Mean: ${chartInfo.stats?.mean} | Median: ${chartInfo.stats?.median}`}>
+              <ChartCard key={key} title={chartInfo.title} subtitle={chartInfo.stats ? `Mean: ${chartInfo.stats.mean} | Median: ${chartInfo.stats.median}` : ''}>
                 <ResponsiveContainer width="100%" height={250}>
                   <BarChart data={chartInfo.data}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#ffffff05" vertical={false} />
                     <XAxis dataKey="range" stroke="#4b5563" tick={{ fontSize: 9, fill: '#D946EF', fontWeight: 600 }} angle={-20} textAnchor="end" />
-                    <YAxis stroke="#4b5563" tick={{ fontSize: 10 ,fill: '#D946EF' }} />
+                    <YAxis stroke="#4b5563" tick={{ fontSize: 10, fill: '#D946EF' }} />
                     <Tooltip content={<CustomTooltip />} />
                     <Bar dataKey="count" name="Count" radius={[4, 4, 0, 0]}>
                       {chartInfo.data.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
@@ -299,13 +319,13 @@ export default function Dashboard({ analysis }) {
             ))}
 
           {/* Rating Distribution */}
-          {chart_data.rating_distribution && (
-            <ChartCard title={chart_data.rating_distribution.title} subtitle={`Avg Rating: ⭐ ${chart_data.rating_distribution.avg_rating}`}>
+          {chart_data.rating_distribution && chart_data.rating_distribution.data && chart_data.rating_distribution.data.length > 0 && (
+            <ChartCard title={chart_data.rating_distribution.title} subtitle={`Avg Rating: ⭐ ${chart_data.rating_distribution.avg_rating || 'N/A'}`}>
               <ResponsiveContainer width="100%" height={250}>
                 <BarChart data={chart_data.rating_distribution.data}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#ffffff05" vertical={false} />
                   <XAxis dataKey="rating" stroke="#4b5563" tick={{ fontSize: 11, fill: '#D946EF', fontWeight: 600 }} />
-                  <YAxis stroke="#4b5563" tick={{ fontSize: 10 ,fill: '#D946EF' }} />
+                  <YAxis stroke="#4b5563" tick={{ fontSize: 10, fill: '#D946EF' }} />
                   <Tooltip content={<CustomTooltip />} />
                   <Bar dataKey="count" name="Count" radius={[6, 6, 0, 0]}>
                     {chart_data.rating_distribution.data.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
@@ -319,7 +339,7 @@ export default function Dashboard({ analysis }) {
       )}
 
       {/* ===== NUMERICAL SUMMARY TABLE ===== */}
-      {chart_data?.summary_table && (
+      {chart_data?.summary_table && chart_data.summary_table.data && chart_data.summary_table.data.length > 0 && (
         <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
           <h3 className="text-white font-bold mb-4 text-sm uppercase tracking-wider">
             📋 Numerical Summary
@@ -355,19 +375,19 @@ export default function Dashboard({ analysis }) {
                       {row.column}
                     </td>
                     <td className="py-3 px-4 text-gray-300 text-sm text-center font-mono">
-                      {row.min.toLocaleString()}
+                      {row.min?.toLocaleString() || 'N/A'}
                     </td>
                     <td className="py-3 px-4 text-gray-300 text-sm text-center font-mono">
-                      {row.max.toLocaleString()}
+                      {row.max?.toLocaleString() || 'N/A'}
                     </td>
                     <td className="py-3 px-4 text-gray-300 text-sm text-center font-mono">
-                      {row.mean.toLocaleString()}
+                      {row.mean?.toLocaleString() || 'N/A'}
                     </td>
                     <td className="py-3 px-4 text-gray-300 text-sm text-center font-mono">
-                      {row.median.toLocaleString()}
+                      {row.median?.toLocaleString() || 'N/A'}
                     </td>
                     <td className="py-3 px-4 text-fuchsia-400 font-bold text-sm text-center font-mono">
-                      {row.total.toLocaleString()}
+                      {row.total?.toLocaleString() || 'N/A'}
                     </td>
                   </tr>
                 ))}
@@ -378,7 +398,7 @@ export default function Dashboard({ analysis }) {
       )}
 
       {/* ===== DETECTED ANOMALIES TABLE ===== */}
-      {anomalies.rows.length > 0 && (
+      {anomalies.rows && anomalies.rows.length > 0 && (
         <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
           <h3 className="text-white font-bold mb-4 text-sm uppercase tracking-wider flex items-center gap-2">
             ⚠️ Detected Anomalies
@@ -394,7 +414,7 @@ export default function Dashboard({ analysis }) {
                   <th className="text-left py-3 px-4 text-fuchsia-400 text-xs font-semibold uppercase tracking-wider border-b border-gray-700">
                     Row
                   </th>
-                  {Object.keys(anomalies.rows[0].data).slice(0, 7).map((key, i) => (
+                  {anomalies.rows[0] && anomalies.rows[0].data && Object.keys(anomalies.rows[0].data).slice(0, 7).map((key, i) => (
                     <th 
                       key={i} 
                       className="text-center py-3 px-4 text-fuchsia-400 text-xs font-semibold uppercase tracking-wider border-b border-gray-700"
@@ -415,7 +435,7 @@ export default function Dashboard({ analysis }) {
                         #{row.row_index}
                       </span>
                     </td>
-                    {Object.values(row.data).slice(0, 7).map((val, j) => (
+                    {row.data && Object.values(row.data).slice(0, 7).map((val, j) => (
                       <td 
                         key={j} 
                         className="py-3 px-4 text-gray-300 text-sm text-center"
