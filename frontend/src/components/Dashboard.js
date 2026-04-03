@@ -7,7 +7,7 @@ import {
   BarChart, Bar, Cell, ScatterChart, Scatter, PieChart, Pie, Legend
 } from 'recharts';
 import { TrendingUp, AlertTriangle, GitBranch, DollarSign, Package, Star } from 'lucide-react';
-import NarrativeCard from './narrativecard';
+import NarrativeCard from './NarrativeCard';
 
 // Fuchsia color palette for charts
 const COLORS = ['#D946EF', '#EC4899', '#A855F7', '#8B5CF6', '#F472B6', '#C084FC', '#E879F9', '#F0ABFC'];
