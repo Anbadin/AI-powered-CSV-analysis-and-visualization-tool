@@ -4,6 +4,24 @@
 
 ![SafiNia Banner](https://img.shields.io/badge/SafiNia-AI%20Data%20Analysis-D946EF?style=for-the-badge&logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IndoaXRlIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+PHBhdGggZD0iTTMgM3YxOGgxOCIvPjxwYXRoIGQ9Im0xOSA5LTUgNS00LTQtMyAzIi8+PC9zdmc+)
 
+# 🧠 SafiNia — Smart Data Story Generator
+
+> Upload any CSV file and watch AI turn your raw data into beautiful
+> visualizations and insightful narratives — in seconds.
+
+## 🌐 Live Demo
+
+| | Link |
+|---|---|
+| 🖥️ **Frontend** | [safinia.vercel.app](https://safinia.vercel.app) |
+| ⚙️ **API Docs** | [safinia-api.onrender.com/docs](https://safinia-api.onrender.com/docs) |
+| 📂 **GitHub** | [Source Code](https://github.com/Anbadin/AI-powered-CSV-analysis-and-visualization-tool) |
+
+> ⚠️ **Note:** Backend uses Render free tier — first load may take
+> ~30 seconds if the server is sleeping.
+
+---
+
 ## ✨ Features
 
 | Feature | Description |

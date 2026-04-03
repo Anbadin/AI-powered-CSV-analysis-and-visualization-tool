@@ -130,3 +130,19 @@ if __name__ == "__main__":
     import uvicorn
     port = int(os.getenv("PORT", 8000))
     uvicorn.run("main:app", host="0.0.0.0", port=port, reload=True)
+
+FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:3000")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        FRONTEND_URL,
+        "https://safinia.vercel.app",          # Your Vercel URL
+        "https://safinia-git-main.vercel.app",  # Vercel preview
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
