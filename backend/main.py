@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 import pandas as pd
 import io
-import json
+import gc
 
 load_dotenv()
 
@@ -17,7 +17,7 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# ─── CORS — supports both local dev and production ───
+# ─── CORS — Single configuration with all allowed origins ───
 FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:3000")
 
 app.add_middleware(
@@ -26,7 +26,9 @@ app.add_middleware(
         "http://localhost:3000",
         "http://127.0.0.1:3000",
         FRONTEND_URL,
-        # Add your Vercel URLs here after deployment
+        "https://safinia-83ojne3qd-anbadins-projects.vercel.app/",                    # ← YOUR VERCEL URL
+        "https://safinia-git-main-anbadins-projects.vercel.app",  # ← Vercel preview URLs
+        "https://*.vercel.app",                          # ← Allow all Vercel subdomains
     ],
     allow_credentials=True,
     allow_methods=["*"],
@@ -51,12 +53,17 @@ def health_check():
 async def upload_file(file: UploadFile = File(...)):
     global latest_analysis
 
+    print(f"📁 Received file: {file.filename}")
+
     if not file.filename.endswith('.csv'):
         raise HTTPException(status_code=400, detail="Only CSV files are supported")
 
     try:
         contents = await file.read()
+        print(f"📊 File size: {len(contents)} bytes")
+        
         df = pd.read_csv(io.BytesIO(contents))
+        print(f"📋 DataFrame shape: {df.shape}")
 
         if df.empty:
             raise HTTPException(status_code=400, detail="CSV file is empty")
@@ -70,6 +77,10 @@ async def upload_file(file: UploadFile = File(...)):
         analysis = analyze_csv(df)
         latest_analysis = analysis
 
+        # Clean up memory
+        gc.collect()
+
+        print("✅ Analysis complete!")
         return {
             "status": "success",
             "filename": file.filename,
@@ -83,7 +94,9 @@ async def upload_file(file: UploadFile = File(...)):
     except HTTPException:
         raise
     except Exception as e:
-        print(f"Upload error: {e}")
+        print(f"❌ Upload error: {e}")
+        import traceback
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Analysis failed: {str(e)}")
 
 
@@ -104,7 +117,7 @@ async def get_narrative():
             "narrative": narrative
         }
     except Exception as e:
-        print(f"Narrative error: {e}")
+        print(f"⚠️ Narrative error: {e}")
         return {
             "status": "fallback",
             "narrative": generate_fallback_narrative(latest_analysis)
@@ -130,19 +143,3 @@ if __name__ == "__main__":
     import uvicorn
     port = int(os.getenv("PORT", 8000))
     uvicorn.run("main:app", host="0.0.0.0", port=port, reload=True)
-
-FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:3000")
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000",
-        "http://127.0.0.1:3000",
-        FRONTEND_URL,
-        "https://safinia.vercel.app",          # Your Vercel URL
-        "https://safinia-git-main.vercel.app",  # Vercel preview
-    ],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
