@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Brain, Loader2, RefreshCw, Sparkles } from 'lucide-react';
-
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 export default function NarrativeCard() {
   const [narrative, setNarrative] = useState('');
   const [isLoading, setIsLoading] = useState(true);

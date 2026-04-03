@@ -1,12 +1,12 @@
 'use client';
 import SampleData from './SampleData';
-
 import { useCallback, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Upload, FileSpreadsheet, AlertCircle, Loader2 } from 'lucide-react';
 import FilePreview from './FilePreview';
 import Dashboard from './Dashboard';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
 export default function FileUpload() {
   const [file, setFile] = useState(null);
@@ -109,7 +109,8 @@ export default function FileUpload() {
       const formData = new FormData();
       formData.append('file', file);
 
-      const response = await fetch('http://localhost:8000/upload', {
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+      const response = await fetch(`${API_URL}/upload`,  {
         method: 'POST',
         body: formData,
       });
