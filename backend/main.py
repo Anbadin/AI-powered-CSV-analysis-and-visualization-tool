@@ -1,92 +1,132 @@
+import os
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from dotenv import load_dotenv
+import pandas as pd
+import io
+import json
+
+load_dotenv()
+
 from analyzer import analyze_csv
 from narrative import generate_narrative
 
 app = FastAPI(
     title="SafiNia API",
-    description="AI-powered CSV analysis backend",
-    version="2.0.0",
+    description="AI-Powered CSV Analysis Engine",
+    version="1.0.0"
 )
+
+# ─── CORS — supports both local dev and production ───
+FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:3000")
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:3000",
         "http://127.0.0.1:3000",
+        FRONTEND_URL,
+        # Add your Vercel URLs here after deployment
     ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-
-# Store the latest analysis in memory (for narrative generation)
+# Store latest analysis in memory
 latest_analysis = {}
 
 
 @app.get("/")
-def root():
+def health_check():
     return {
-        "status": "running",
-        "message": "SafiNia API is live! 🚀",
-        "version": "2.0.0",
+        "status": "healthy",
+        "app": "SafiNia API",
+        "version": "1.0.0",
+        "docs": "/docs"
     }
 
 
 @app.post("/upload")
-async def upload_csv(file: UploadFile = File(...)):
-    """Upload a CSV file and get ML analysis."""
+async def upload_file(file: UploadFile = File(...)):
     global latest_analysis
-    
-    if not file.filename.lower().endswith('.csv'):
-        raise HTTPException(status_code=400, detail="Only CSV files are accepted.")
-    
-    contents = await file.read()
-    size_mb = len(contents) / (1024 * 1024)
-    
-    if size_mb > 10:
-        raise HTTPException(status_code=400, detail=f"File too large ({size_mb:.1f}MB). Maximum is 10MB.")
-    
+
+    if not file.filename.endswith('.csv'):
+        raise HTTPException(status_code=400, detail="Only CSV files are supported")
+
     try:
-        file_content = contents.decode('utf-8')
-    except UnicodeDecodeError:
-        try:
-            file_content = contents.decode('latin-1')
-        except Exception:
-            raise HTTPException(status_code=400, detail="Could not read file.")
-    
-    result = analyze_csv(file_content)
-    
-    if "error" in result:
-        raise HTTPException(status_code=400, detail=result["error"])
-    
-    # Store for narrative generation
-    latest_analysis = result
-    
-    return {
-        "message": "File analyzed successfully! ✅",
-        "filename": file.filename,
-        "size": f"{size_mb:.2f} MB" if size_mb >= 1 else f"{len(contents)/1024:.1f} KB",
-        "analysis": result,
-    }
+        contents = await file.read()
+        df = pd.read_csv(io.BytesIO(contents))
+
+        if df.empty:
+            raise HTTPException(status_code=400, detail="CSV file is empty")
+
+        if len(df.columns) < 2:
+            raise HTTPException(
+                status_code=400,
+                detail="CSV must have at least 2 columns"
+            )
+
+        analysis = analyze_csv(df)
+        latest_analysis = analysis
+
+        return {
+            "status": "success",
+            "filename": file.filename,
+            "analysis": analysis
+        }
+
+    except pd.errors.EmptyDataError:
+        raise HTTPException(status_code=400, detail="CSV file is empty or malformed")
+    except pd.errors.ParserError:
+        raise HTTPException(status_code=400, detail="Could not parse CSV file")
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Upload error: {e}")
+        raise HTTPException(status_code=500, detail=f"Analysis failed: {str(e)}")
 
 
 @app.post("/narrative")
 async def get_narrative():
-    """Generate AI narrative from the latest analysis."""
     global latest_analysis
-    
+
     if not latest_analysis:
-        raise HTTPException(status_code=400, detail="No analysis data found. Upload a CSV first.")
-    
-    narrative = generate_narrative(latest_analysis)
-    
-    return {
-        "narrative": narrative,
-    }
+        raise HTTPException(
+            status_code=400,
+            detail="No analysis data available. Upload a CSV first."
+        )
+
+    try:
+        narrative = generate_narrative(latest_analysis)
+        return {
+            "status": "success",
+            "narrative": narrative
+        }
+    except Exception as e:
+        print(f"Narrative error: {e}")
+        return {
+            "status": "fallback",
+            "narrative": generate_fallback_narrative(latest_analysis)
+        }
+
+
+def generate_fallback_narrative(analysis):
+    """Fallback narrative when Gemini API fails"""
+    info = analysis.get("basic_info", {})
+    rows = info.get("total_rows", "unknown")
+    cols = info.get("total_columns", "unknown")
+
+    return (
+        f"## Data Analysis Summary\n\n"
+        f"Your dataset contains **{rows:,}** rows and **{cols}** columns. "
+        f"The analysis has been completed successfully using machine learning algorithms "
+        f"including Isolation Forest for anomaly detection and Linear Regression for trend analysis.\n\n"
+        f"Review the charts and statistics above for detailed insights into your data patterns."
+    )
 
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+    port = int(os.getenv("PORT", 8000))
+    uvicorn.run("main:app", host="0.0.0.0", port=port, reload=True)

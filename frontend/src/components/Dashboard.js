@@ -1,5 +1,6 @@
 'use client';
-
+import StatsOverview from './StatsOverview';
+import ColumnBadges from './ColumnBadges';
 import { motion } from 'framer-motion';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -57,34 +58,30 @@ export default function Dashboard({ analysis }) {
 
   return (
     <motion.div
+      id="dashboard-content"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="space-y-6 max-w-6xl mx-auto pb-12"
+      className="space-y-6"
     >
-      {/* ===== HEADER ===== */}
-      <div className="bg-[#2C2E39] border border-fuchsia-500/20 rounded-2xl p-6 text-white shadow-xl">
-        <h2 className="text-2xl font-bold mb-4">📊 Analysis Complete</h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <div className="bg-white/5 border border-white/5 rounded-xl px-4 py-2">
-            <p className="text-fuchsia-100/50 text-[10px] font-bold uppercase tracking-wider">Rows</p>
-            <p className="text-xl font-bold">{basic_info.total_rows.toLocaleString()}</p>
-          </div>
-          <div className="bg-white/5 border border-white/5 rounded-xl px-4 py-2">
-            <p className="text-fuchsia-100/50 text-[10px] font-bold uppercase tracking-wider">Columns</p>
-            <p className="text-xl font-bold">{basic_info.total_columns}</p>
-          </div>
-          <div className="bg-white/5 border border-white/5 rounded-xl px-4 py-2">
-            <p className="text-fuchsia-100/50 text-[10px] font-bold uppercase tracking-wider">Missing</p>
-            <p className="text-xl font-bold">{basic_info.missing_percentage}%</p>
-          </div>
-          <div className="bg-white/5 border border-white/5 rounded-xl px-4 py-2">
-            <p className="text-fuchsia-100/50 text-[10px] font-bold uppercase tracking-wider">Duplicates</p>
-            <p className="text-xl font-bold">{basic_info.duplicate_rows}</p>
+            {/* ===== HEADER ===== */}
+      <div className="bg-gradient-to-r from-fuchsia-600 to-pink-600 rounded-2xl p-6 text-white">
+        <div className="flex justify-between items-start">
+          <div>
+            <h2 className="text-2xl font-bold mb-1">📊 Analysis Complete</h2>
+            <p className="text-fuchsia-100 text-sm">
+              Powered by scikit-learn & Gemini AI
+            </p>
           </div>
         </div>
       </div>
 
+      {/* ===== STATS OVERVIEW ===== */}
+      <StatsOverview basicInfo={basic_info} columnTypes={analysis.column_types} />
+
+      {/* ===== COLUMN BADGES ===== */}
+      <ColumnBadges columnTypes={analysis.column_types} />
+      
       {/* ===== ML INSIGHTS STRIP ===== */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* Correlations */}
@@ -156,7 +153,7 @@ export default function Dashboard({ analysis }) {
                 <BarChart data={chart_data.revenue_by_item.data} margin={{ bottom: 60 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#ffffff05" vertical={false} />
                   <XAxis dataKey="name" stroke="#4b5563" tick={{ fontSize: 10, fill: '#D946EF', fontWeight: 600 }} angle={-35} textAnchor="end" height={70} />
-                  <YAxis stroke="#4b5563" tick={{ fontSize: 10 }} tickFormatter={formatNumber} />
+                  <YAxis stroke="#4b5563" tick={{ fontSize: 10,fill: '#D946EF' }} tickFormatter={formatNumber} />
                   <Tooltip content={({ active, payload, label }) => {
                     if (!active || !payload) return null;
                     const data = payload[0]?.payload;
@@ -182,7 +179,7 @@ export default function Dashboard({ analysis }) {
             <ChartCard title={chart_data.units_by_item.title}>
               <ResponsiveContainer width="100%" height={250}>
                 <BarChart data={chart_data.units_by_item.data} layout="vertical" margin={{ left: 20 }}>
-                  <XAxis type="number" stroke="#4b5563" tick={{ fontSize: 10 }} />
+                  <XAxis type="number" stroke="#4b5563" tick={{ fontSize: 10,fill: '#D946EF' }} />
                   <YAxis dataKey="name" type="category" stroke="#4b5563" tick={{ fontSize: 10, fill: '#D946EF', fontWeight: 600 }} width={80} />
                   <Tooltip content={({ active, payload, label }) => {
                     if (!active || !payload) return null;
@@ -207,7 +204,7 @@ export default function Dashboard({ analysis }) {
               <ResponsiveContainer width="100%" height={250}>
                 <BarChart data={chart_data.category_breakdown.data}>
                   <XAxis dataKey="name" stroke="#4b5563" tick={{ fontSize: 11, fill: '#D946EF', fontWeight: 600 }} />
-                  <YAxis stroke="#4b5563" tick={{ fontSize: 10 }} tickFormatter={formatNumber} />
+                  <YAxis stroke="#4b5563" tick={{ fontSize: 10 ,fill: '#D946EF' }} tickFormatter={formatNumber} />
                   <Tooltip content={({ active, payload, label }) => {
                     if (!active || !payload) return null;
                     const data = payload[0]?.payload;
@@ -237,7 +234,7 @@ export default function Dashboard({ analysis }) {
                   <LineChart data={chartInfo.data}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#ffffff05" vertical={false} />
                     <XAxis dataKey="date" stroke="#4b5563" tick={{ fontSize: 10, fill: '#D946EF', fontWeight: 600 }} />
-                    <YAxis stroke="#4b5563" tick={{ fontSize: 10 }} />
+                    <YAxis stroke="#4b5563" tick={{ fontSize: 10,fill: '#D946EF'  }} />
                     <Tooltip content={({ active, payload }) => {
                       if (!active || !payload?.length) return null;
                       const data = payload[0]?.payload;
@@ -261,7 +258,7 @@ export default function Dashboard({ analysis }) {
                 <ScatterChart margin={{ bottom: 10 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#ffffff05" />
                   <XAxis dataKey="x" name={chart_data.scatter.x_label} stroke="#4b5563" tick={{ fontSize: 10, fill: '#D946EF', fontWeight: 600 }} />
-                  <YAxis dataKey="y" name={chart_data.scatter.y_label} stroke="#4b5563" tick={{ fontSize: 10 }} />
+                  <YAxis dataKey="y" name={chart_data.scatter.y_label} stroke="#4b5563" tick={{ fontSize: 10,fill: '#D946EF'  }} />
                   <Tooltip content={({ active, payload }) => {
                     if (!active || !payload?.length) return null;
                     const data = payload[0]?.payload;
@@ -291,7 +288,7 @@ export default function Dashboard({ analysis }) {
                   <BarChart data={chartInfo.data}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#ffffff05" vertical={false} />
                     <XAxis dataKey="range" stroke="#4b5563" tick={{ fontSize: 9, fill: '#D946EF', fontWeight: 600 }} angle={-20} textAnchor="end" />
-                    <YAxis stroke="#4b5563" tick={{ fontSize: 10 }} />
+                    <YAxis stroke="#4b5563" tick={{ fontSize: 10 ,fill: '#D946EF' }} />
                     <Tooltip content={<CustomTooltip />} />
                     <Bar dataKey="count" name="Count" radius={[4, 4, 0, 0]}>
                       {chartInfo.data.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
@@ -308,7 +305,7 @@ export default function Dashboard({ analysis }) {
                 <BarChart data={chart_data.rating_distribution.data}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#ffffff05" vertical={false} />
                   <XAxis dataKey="rating" stroke="#4b5563" tick={{ fontSize: 11, fill: '#D946EF', fontWeight: 600 }} />
-                  <YAxis stroke="#4b5563" tick={{ fontSize: 10 }} />
+                  <YAxis stroke="#4b5563" tick={{ fontSize: 10 ,fill: '#D946EF' }} />
                   <Tooltip content={<CustomTooltip />} />
                   <Bar dataKey="count" name="Count" radius={[6, 6, 0, 0]}>
                     {chart_data.rating_distribution.data.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
@@ -321,27 +318,57 @@ export default function Dashboard({ analysis }) {
         </div>
       )}
 
-      {/* ===== SUMMARY TABLE ===== */}
+      {/* ===== NUMERICAL SUMMARY TABLE ===== */}
       {chart_data?.summary_table && (
-        <div className="bg-[#2C2E39] border border-white/5 rounded-[2rem] p-6 shadow-xl">
-          <h3 className="text-white font-bold uppercase tracking-widest text-[10px] mb-6">Numerical Summary</h3>
-          <div className="overflow-x-auto rounded-xl border border-white/5 bg-black/10">
-            <table className="w-full text-sm border-collapse text-center">
+        <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
+          <h3 className="text-white font-bold mb-4 text-sm uppercase tracking-wider">
+            📋 Numerical Summary
+          </h3>
+          <div className="overflow-x-auto rounded-lg border border-gray-800">
+            <table className="w-full text-sm">
               <thead>
-                <tr className="bg-white/5">
-                  <th className="py-3 px-4 text-gray-500 font-bold text-[9px] uppercase tracking-widest border-b border-white/5 text-left">Column</th>
-                  <th className="py-3 px-4 text-gray-500 font-bold text-[9px] uppercase tracking-widest border-b border-white/5">Min</th>
-                  <th className="py-3 px-4 text-gray-500 font-bold text-[9px] uppercase tracking-widest border-b border-white/5">Max</th>
-                  <th className="py-3 px-4 text-fuchsia-400 font-bold text-[9px] uppercase tracking-widest border-b border-white/5">Total</th>
+                <tr className="bg-gray-800/50">
+                  <th className="text-left py-3 px-4 text-gray-400 text-xs font-semibold uppercase tracking-wider border-b border-gray-700">
+                    Column
+                  </th>
+                  <th className="text-center py-3 px-4 text-gray-400 text-xs font-semibold uppercase tracking-wider border-b border-gray-700">
+                    Min
+                  </th>
+                  <th className="text-center py-3 px-4 text-gray-400 text-xs font-semibold uppercase tracking-wider border-b border-gray-700">
+                    Max
+                  </th>
+                  <th className="text-center py-3 px-4 text-gray-400 text-xs font-semibold uppercase tracking-wider border-b border-gray-700">
+                    Mean
+                  </th>
+                  <th className="text-center py-3 px-4 text-gray-400 text-xs font-semibold uppercase tracking-wider border-b border-gray-700">
+                    Median
+                  </th>
+                  <th className="text-center py-3 px-4 text-fuchsia-400 text-xs font-bold uppercase tracking-wider border-b border-gray-700">
+                    Total
+                  </th>
                 </tr>
               </thead>
               <tbody>
                 {chart_data.summary_table.data.map((row, i) => (
-                  <tr key={i} className="border-b border-white/5 hover:bg-fuchsia-500/5 transition-colors group">
-                    <td className="py-3 px-4 text-white font-bold text-xs uppercase text-left">{row.column}</td>
-                    <td className="py-3 px-4 text-gray-400 text-xs font-mono">{row.min.toLocaleString()}</td>
-                    <td className="py-3 px-4 text-gray-400 text-xs font-mono">{row.max.toLocaleString()}</td>
-                    <td className="py-3 px-4 text-fuchsia-400 font-bold text-xs font-mono">{row.total.toLocaleString()}</td>
+                  <tr key={i} className="border-b border-gray-800/50 hover:bg-gray-800/30 transition-colors">
+                    <td className="py-3 px-4 text-white font-bold text-sm uppercase">
+                      {row.column}
+                    </td>
+                    <td className="py-3 px-4 text-gray-300 text-sm text-center font-mono">
+                      {row.min.toLocaleString()}
+                    </td>
+                    <td className="py-3 px-4 text-gray-300 text-sm text-center font-mono">
+                      {row.max.toLocaleString()}
+                    </td>
+                    <td className="py-3 px-4 text-gray-300 text-sm text-center font-mono">
+                      {row.mean.toLocaleString()}
+                    </td>
+                    <td className="py-3 px-4 text-gray-300 text-sm text-center font-mono">
+                      {row.median.toLocaleString()}
+                    </td>
+                    <td className="py-3 px-4 text-fuchsia-400 font-bold text-sm text-center font-mono">
+                      {row.total.toLocaleString()}
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -350,50 +377,81 @@ export default function Dashboard({ analysis }) {
         </div>
       )}
 
-      {/* ===== ANOMALY TABLE ===== */}
+      {/* ===== DETECTED ANOMALIES TABLE ===== */}
       {anomalies.rows.length > 0 && (
-        <div className="bg-[#2C2E39] border border-white/5 rounded-[2rem] p-6 shadow-xl">
-          <h3 className="text-white font-bold uppercase tracking-widest text-[10px] mb-6">Detected Anomalies</h3>
-          <div className="overflow-x-auto rounded-xl border border-white/5 bg-black/10">
-            <table className="w-full text-center border-collapse">
+        <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
+          <h3 className="text-white font-bold mb-4 text-sm uppercase tracking-wider flex items-center gap-2">
+            ⚠️ Detected Anomalies
+            <span className="text-xs bg-fuchsia-500/10 text-fuchsia-400 px-2 py-0.5 rounded-full border border-fuchsia-500/20 normal-case tracking-normal">
+              {anomalies.count} found
+            </span>
+          </h3>
+
+          <div className="overflow-x-auto rounded-lg border border-gray-800">
+            <table className="w-full text-sm">
               <thead>
-                <tr className="bg-white/5">
-                  <th className="py-3 px-4 text-gray-500 font-bold text-[9px] uppercase tracking-widest border-b border-white/5">Row</th>
-                  {Object.keys(anomalies.rows[0].data).slice(0, 6).map((key, i) => (
-                    <th key={i} className="py-3 px-4 text-fuchsia-400 font-bold text-[9px] uppercase tracking-widest border-b border-white/5">{key}</th>
+                <tr className="bg-gray-800/50">
+                  <th className="text-left py-3 px-4 text-fuchsia-400 text-xs font-semibold uppercase tracking-wider border-b border-gray-700">
+                    Row
+                  </th>
+                  {Object.keys(anomalies.rows[0].data).slice(0, 7).map((key, i) => (
+                    <th 
+                      key={i} 
+                      className="text-center py-3 px-4 text-fuchsia-400 text-xs font-semibold uppercase tracking-wider border-b border-gray-700"
+                    >
+                      {key}
+                    </th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {anomalies.rows.map((row, i) => (
-                  <tr key={i} className="border-b border-white/5 hover:bg-fuchsia-500/5 transition-colors group">
-                    <td className="py-3 px-4 text-gray-600 font-mono text-[9px]">#{row.row_index}</td>
-                    {Object.values(row.data).slice(0, 6).map((val, j) => (
-                      <td key={j} className="py-3 px-4 text-gray-400 text-[11px] group-hover:text-white transition-colors">{val}</td>
+                  <tr 
+                    key={i} 
+                    className="border-b border-gray-800/50 hover:bg-gray-800/30 transition-colors"
+                  >
+                    <td className="py-3 px-4">
+                      <span className="text-fuchsia-400/70 font-mono font-bold text-sm">
+                        #{row.row_index}
+                      </span>
+                    </td>
+                    {Object.values(row.data).slice(0, 7).map((val, j) => (
+                      <td 
+                        key={j} 
+                        className="py-3 px-4 text-gray-300 text-sm text-center"
+                      >
+                        {val}
+                      </td>
                     ))}
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
+
+          <p className="text-gray-600 text-xs mt-4">
+            Detected by Isolation Forest ML model · Showing {anomalies.rows.length} of {anomalies.count} anomalies
+          </p>
         </div>
       )}
+
     </motion.div>
   );
 }
 
+
 // ─── REUSABLE CHART CARD WRAPPER ───
-function ChartCard({ title, subtitle, fullWidth, children }) {
+function ChartCard({ title, subtitle, icon, fullWidth, children }) {
   return (
-    <div className={`bg-[#2C2E39] border border-white/5 rounded-[2rem] p-6 shadow-xl ${fullWidth ? 'lg:col-span-2' : ''}`}>
-      <div className="mb-6">
-        <h3 className="text-white font-bold uppercase tracking-widest text-[10px]">{title}</h3>
-        {/* SUBTITLE: Now using CREAM color for Mean/Avg visibility */}
-        {subtitle && (
-          <p className="text-[#FFFDF2] text-[9px] font-black uppercase tracking-widest mt-1 opacity-90">
-            {subtitle}
-          </p>
-        )}
+    <div className={`bg-gray-900 border border-gray-800 rounded-xl p-5 
+                    hover:border-gray-700 transition-colors
+                    ${fullWidth ? 'lg:col-span-2' : ''}`}>
+      <div className="mb-4">
+        <h3 className="text-white font-semibold text-sm flex items-center gap-2">
+          {icon && <span className="text-fuchsia-400">{icon}</span>}
+          {title}
+        </h3>
+        {subtitle && <p className="text-gray-500 text-xs mt-1">{subtitle}</p>}
       </div>
       {children}
     </div>

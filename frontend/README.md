@@ -1,36 +1,36 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# 🧠 SafiNia — Smart Data Story Generator
 
-## Getting Started
+> Upload any CSV file and watch AI turn your raw data into beautiful visualizations and insightful narratives — in seconds.
 
-First, run the development server:
+![SafiNia Banner](https://img.shields.io/badge/SafiNia-AI%20Data%20Analysis-D946EF?style=for-the-badge&logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IndoaXRlIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+PHBhdGggZD0iTTMgM3YxOGgxOCIvPjxwYXRoIGQ9Im0xOSA5LTUgNS00LTQtMyAzIi8+PC9zdmc+)
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## ✨ Features
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+| Feature | Description |
+|---------|-------------|
+| 📤 **Smart Upload** | Drag & drop CSV with instant preview |
+| 🔍 **Auto Type Detection** | Automatically identifies numerical, categorical, and datetime columns |
+| 📊 **7+ Chart Types** | Revenue charts, time series, scatter plots, distributions, and more |
+| 🤖 **AI Narrative** | Gemini AI writes a plain-English summary of your data |
+| 🧠 **ML Insights** | Correlation detection, anomaly detection (Isolation Forest), trend analysis |
+| 📈 **Smart Calculations** | Auto-calculates revenue, identifies top products, category breakdowns |
+| 📤 **Export** | Download your dashboard as a PNG image |
+| 📁 **Sample Data** | One-click demo with built-in sample dataset |
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+## 🛠️ Tech Stack
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### Frontend
+- **Next.js 14** — React framework with App Router
+- **Tailwind CSS** — Utility-first CSS styling
+- **Recharts** — Interactive data visualizations
+- **Framer Motion** — Smooth animations
+- **Lucide React** — Beautiful icons
 
-## Learn More
+### Backend
+- **Python FastAPI** — High-performance API framework
+- **pandas** — Data manipulation and analysis
+- **scikit-learn** — Machine learning (Isolation Forest, Linear Regression)
+- **Google Gemini AI** — Natural language narrative generation
+- **NumPy** — Numerical computing
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 🏗️ Architecture
