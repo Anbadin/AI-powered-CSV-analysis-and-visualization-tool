@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Upload, FileSpreadsheet, AlertCircle, Loader2 } from 'lucide-react';
 import FilePreview from './FilePreview';
 import Dashboard from './Dashboard';
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://safinia-api.onrender.com';
+const API_URL = (process.env.NEXT_PUBLIC_API_URL || 'https://safinia-api.onrender.com').trim();
 
 export default function FileUpload() {
   const [file, setFile] = useState(null);
