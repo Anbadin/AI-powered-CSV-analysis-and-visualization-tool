@@ -19,22 +19,22 @@ export default function FilePreview({ preview, onRemove, onAnalyze }) {
             
             <div>
               <p className="text-white font-bold text-xl tracking-tight">
-                {preview.fileName}
+                {preview?.fileName || 'File'}
               </p>
               <div className="flex flex-wrap items-center gap-4 mt-2">
                 <span className="flex items-center gap-1.5 text-gray-400 text-xs font-bold uppercase tracking-wider">
                   <HardDrive size={14} className="text-fuchsia-500" />
-                  {preview.fileSize}
+                  {preview?.fileSize || '0 KB'}
                 </span>
                 <span className="h-1 w-1 rounded-full bg-fuchsia-500/40"></span>
                 <span className="flex items-center gap-1.5 text-gray-400 text-xs font-bold uppercase tracking-wider">
                   <Rows3 size={14} className="text-fuchsia-500" />
-                  {preview.totalRows.toLocaleString()} rows
+                  {preview?.totalRows?.toLocaleString() || '0'} rows
                 </span>
                 <span className="h-1 w-1 rounded-full bg-fuchsia-500/40"></span>
                 <span className="flex items-center gap-1.5 text-gray-400 text-xs font-bold uppercase tracking-wider">
                   <Columns3 size={14} className="text-fuchsia-500" />
-                  {preview.totalColumns} columns
+                  {preview?.totalColumns || '0'} columns
                 </span>
               </div>
             </div>
@@ -60,26 +60,23 @@ export default function FilePreview({ preview, onRemove, onAnalyze }) {
               Data Snapshot
             </p>
             <span className="text-gray-500 text-[10px] uppercase font-bold tracking-widest">
-              First {Math.min(5, preview.sampleRows.length)} Records
+              First {Math.min(5, preview?.sampleRows?.length || 0)} Records
             </span>
           </div>
           
-          {/* Removed 'min-w' constraints to prevent forced horizontal scrolling */}
           <div className="overflow-x-hidden rounded-2xl border border-white/5 bg-black/20">
             <table className="w-full table-auto border-collapse">
               <thead>
                 <tr className="bg-white/5">
-                  {/* Index column centered */}
                   <th className="px-2 py-4 text-center text-gray-500 font-bold text-[10px] uppercase tracking-widest border-b border-white/5 w-10">
                     #
                   </th>
-                  {preview.headers.map((header, i) => (
+                  {preview?.headers?.map((header, i) => (
                     <th
                       key={i}
-                      /* CHANGED: text-center, reduced font size, and tighter padding */
                       className="px-2 py-4 text-center text-fuchsia-400 
-                                font-black text-[10px] uppercase tracking-wider border-b border-white/5
-                                whitespace-normal leading-tight"
+                                 font-black text-[10px] uppercase tracking-wider border-b border-white/5
+                                 whitespace-normal leading-tight"
                     >
                       {header}
                     </th>
@@ -87,19 +84,17 @@ export default function FilePreview({ preview, onRemove, onAnalyze }) {
                 </tr>
               </thead>
               <tbody>
-                {preview.sampleRows.map((row, i) => (
+                {preview?.sampleRows?.map((row, i) => (
                   <tr 
                     key={i} 
                     className="hover:bg-fuchsia-500/5 transition-colors group"
                   >
-                    {/* Row Number centered */}
                     <td className="px-2 py-3 text-center text-gray-600 border-b border-white/5 text-[9px] font-mono">
                       {String(i + 1).padStart(2, '0')}
                     </td>
                     {row.map((cell, j) => (
                       <td
                         key={j}
-                        /* CHANGED: text-center, text-xs (smaller), and px-2 (tighter) */
                         className="px-2 py-3 text-center text-gray-300 border-b 
                                   border-white/5 text-[11px] leading-relaxed
                                   group-hover:text-white transition-colors"

@@ -23,22 +23,22 @@ const tooltipStyle = {
   boxShadow: '0 10px 30px rgba(0,0,0,0.5)',
 };
 
-// Formatters preserved exactly from your code
+// Formatters preserved with added null-safety
 const formatNumber = (num) => {
-  if (!num) return '$0';
+  if (num === undefined || num === null) return '$0';
   if (num >= 1000000) return `$${(num / 1000000).toFixed(1)}M`;
   if (num >= 1000) return `$${(num / 1000).toFixed(1)}K`;
-  return `$${num.toFixed(0)}`;
+  return `$${Number(num).toFixed(0)}`;
 };
 
 const formatPlain = (num) => {
-  if (!num) return '0';
+  if (num === undefined || num === null) return '0';
   if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`;
   if (num >= 1000) return `${(num / 1000).toFixed(1)}K`;
-  return num.toFixed(0);
+  return Number(num).toFixed(0);
 };
 
-// Custom Tooltip Component
+// Custom Tooltip Component - ADDED SAFETY HERE
 const CustomTooltip = ({ active, payload, label }) => {
   if (!active || !payload || !payload.length) return null;
   
@@ -47,7 +47,7 @@ const CustomTooltip = ({ active, payload, label }) => {
       <p className="text-white font-semibold text-sm mb-1">{label}</p>
       {payload.map((entry, index) => (
         <p key={index} className="text-sm" style={{ color: entry.color || '#D946EF' }}>
-          {entry.name}: {typeof entry.value === 'number' ? entry.value.toLocaleString() : entry.value}
+          {entry.name}: {typeof entry.value === 'number' ? entry.value?.toLocaleString() : (entry.value || '0')}
         </p>
       ))}
     </div>
@@ -180,9 +180,9 @@ export default function Dashboard({ analysis }) {
                     return (
                       <div style={tooltipStyle}>
                         <p className="text-white font-bold text-sm mb-2">{label}</p>
-                        <p className="text-fuchsia-400 text-xs">💰 Revenue: ${data?.revenue?.toLocaleString()}</p>
-                        <p className="text-pink-400 text-xs">🏷️ Avg Price: ${data?.price?.toLocaleString()}</p>
-                        <p className="text-purple-400 text-xs">📦 Units: {data?.quantity?.toLocaleString()}</p>
+                        <p className="text-fuchsia-400 text-xs">💰 Revenue: ${data?.revenue?.toLocaleString() || '0'}</p>
+                        <p className="text-pink-400 text-xs">🏷️ Avg Price: ${data?.price?.toLocaleString() || '0'}</p>
+                        <p className="text-purple-400 text-xs">📦 Units: {data?.quantity?.toLocaleString() || '0'}</p>
                       </div>
                     );
                   }} />
@@ -206,7 +206,7 @@ export default function Dashboard({ analysis }) {
                     return (
                       <div style={tooltipStyle}>
                         <p className="text-white font-bold text-xs mb-1">{label}</p>
-                        <p className="text-fuchsia-400 text-sm font-bold">📦 Units Sold: {payload[0]?.value?.toLocaleString()}</p>
+                        <p className="text-fuchsia-400 text-sm font-bold">📦 Units Sold: {payload[0]?.value?.toLocaleString() || '0'}</p>
                       </div>
                     );
                   }} />
@@ -231,8 +231,8 @@ export default function Dashboard({ analysis }) {
                     return (
                       <div style={tooltipStyle}>
                         <p className="text-white font-bold text-xs uppercase mb-2">{label}</p>
-                        <p className="text-fuchsia-400 text-sm font-bold">💰 Revenue: ${data?.revenue?.toLocaleString()}</p>
-                        <p className="text-purple-400 text-xs">📦 Total Units: {data?.totalUnits?.toLocaleString()}</p>
+                        <p className="text-fuchsia-400 text-sm font-bold">💰 Revenue: ${data?.revenue?.toLocaleString() || '0'}</p>
+                        <p className="text-purple-400 text-xs">📦 Total Units: {data?.totalUnits?.toLocaleString() || '0'}</p>
                       </div>
                     );
                   }} />
@@ -261,7 +261,7 @@ export default function Dashboard({ analysis }) {
                       return (
                         <div style={tooltipStyle}>
                           <p className="text-gray-500 text-[10px] font-bold mb-1">{data?.fullDate}</p>
-                          <p className="text-fuchsia-400 font-bold text-sm">{chartInfo.y_label}: {data?.value?.toLocaleString()}</p>
+                          <p className="text-fuchsia-400 font-bold text-sm">{chartInfo.y_label}: {data?.value?.toLocaleString() || '0'}</p>
                         </div>
                       );
                     }} />
@@ -285,8 +285,8 @@ export default function Dashboard({ analysis }) {
                     return (
                       <div style={tooltipStyle}>
                         {data?.name && <p className="text-white font-bold text-xs mb-2 uppercase">{data.name}</p>}
-                        <p className="text-fuchsia-400 text-xs">{chart_data.scatter.x_label}: {data?.x?.toLocaleString()}</p>
-                        <p className="text-pink-400 text-xs">{chart_data.scatter.y_label}: {data?.y?.toLocaleString()}</p>
+                        <p className="text-fuchsia-400 text-xs">{chart_data.scatter.x_label}: {data?.x?.toLocaleString() || '0'}</p>
+                        <p className="text-pink-400 text-xs">{chart_data.scatter.y_label}: {data?.y?.toLocaleString() || '0'}</p>
                       </div>
                     );
                   }} />
