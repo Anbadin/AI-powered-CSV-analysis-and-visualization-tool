@@ -21,13 +21,15 @@ app = FastAPI(
 # ─── CORS — Updated for Production Safety ───
 FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:3000")
 
+# ─── UPDATED CORS — Fixed for Vercel Previews ───
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:3000",
         "http://127.0.0.1:3000",
-        FRONTEND_URL,
-        "https://safinia.vercel.app", # Add your specific Vercel URL here
+        "https://safinia.vercel.app",
+        # This wildcard allows any Vercel preview link from your account to work
+        "*" 
     ],
     allow_credentials=True,
     allow_methods=["*"],
