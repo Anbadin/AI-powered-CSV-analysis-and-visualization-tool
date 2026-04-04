@@ -3,15 +3,17 @@
 import { motion } from 'framer-motion';
 import { Database, Columns3, AlertCircle, Copy, Clock } from 'lucide-react';
 
-export default function StatsOverview({ basicInfo, columnTypes }) {
-  const numNumerical = Object.values(columnTypes).filter(t => t === 'numerical').length;
-  const numCategorical = Object.values(columnTypes).filter(t => t === 'categorical').length;
-  const numDatetime = Object.values(columnTypes).filter(t => t === 'datetime').length;
+export default function StatsOverview({ basicInfo = {}, columnTypes = {} }) {
+  // Safe calculations with fallbacks
+  const types = Object.values(columnTypes || {});
+  const numNumerical = types.filter(t => t === 'numerical' || t === 'numeric').length;
+  const numCategorical = types.filter(t => t === 'categorical').length;
+  const numDatetime = types.filter(t => t === 'datetime').length;
 
   const stats = [
     {
       label: 'Total Rows',
-      value: basicInfo.total_rows.toLocaleString(),
+      value: basicInfo?.total_rows?.toLocaleString() || '0',
       icon: <Database size={16} />,
       color: 'text-fuchsia-400',
       bg: 'bg-fuchsia-500/10',
@@ -26,21 +28,21 @@ export default function StatsOverview({ basicInfo, columnTypes }) {
     },
     {
       label: 'Missing',
-      value: `${basicInfo.missing_percentage}%`,
+      value: `${basicInfo?.missing_percentage || 0}%`,
       icon: <AlertCircle size={16} />,
-      color: basicInfo.missing_percentage > 5 ? 'text-red-400' : 'text-green-400',
-      bg: basicInfo.missing_percentage > 5 ? 'bg-red-500/10' : 'bg-green-500/10',
+      color: (basicInfo?.missing_percentage || 0) > 5 ? 'text-red-400' : 'text-green-400',
+      bg: (basicInfo?.missing_percentage || 0) > 5 ? 'bg-red-500/10' : 'bg-green-500/10',
     },
     {
       label: 'Duplicates',
-      value: basicInfo.duplicate_rows.toLocaleString(),
+      value: basicInfo?.duplicate_rows?.toLocaleString() || '0',
       icon: <Copy size={16} />,
-      color: basicInfo.duplicate_rows > 0 ? 'text-yellow-400' : 'text-green-400',
-      bg: basicInfo.duplicate_rows > 0 ? 'bg-yellow-500/10' : 'bg-green-500/10',
+      color: (basicInfo?.duplicate_rows || 0) > 0 ? 'text-yellow-400' : 'text-green-400',
+      bg: (basicInfo?.duplicate_rows || 0) > 0 ? 'bg-yellow-500/10' : 'bg-green-500/10',
     },
     {
       label: 'Memory',
-      value: basicInfo.memory_usage,
+      value: basicInfo?.memory_usage || '0 KB',
       icon: <Clock size={16} />,
       color: 'text-blue-400',
       bg: 'bg-blue-500/10',

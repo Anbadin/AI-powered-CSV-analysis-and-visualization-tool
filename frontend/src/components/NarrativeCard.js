@@ -3,24 +3,27 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Brain, Loader2, RefreshCw, Sparkles } from 'lucide-react';
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://safinia-api.onrender.com';
-export default function NarrativeCard() {
+
+export default function NarrativeCard({ analysis }) {
   const [narrative, setNarrative] = useState('');
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
   const fetchNarrative = async () => {
+    if (!analysis) return;
     setIsLoading(true);
     setError('');
     setNarrative('');
 
     try {
-      const response = await fetch('http://localhost:8000/narrative', {
+      const response = await fetch(`${API_URL}/narrative`, {
         method: 'POST',
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
+        const errorData = await response.json().catch(() => ({}));
         throw new Error(errorData.detail || 'Failed to generate narrative');
       }
 
@@ -34,21 +37,18 @@ export default function NarrativeCard() {
   };
 
   useEffect(() => {
-    fetchNarrative();
-  }, []);
+    if (analysis) fetchNarrative();
+  }, [analysis]);
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay: 0.2 }}
-      /* THEME: Cool Charcoal with subtle Fuchsia border */
       className="bg-[#2C2E39] border border-fuchsia-500/20 rounded-[2rem] p-6 shadow-xl"
     >
-      {/* Header: Reduced font sizes to match Dashboard */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
-          {/* Signature Cream Icon Box */}
           <div className="bg-[#FFFDF2] p-2.5 rounded-xl shadow-md">
             <Brain size={18} className="text-fuchsia-600" />
           </div>
@@ -61,15 +61,13 @@ export default function NarrativeCard() {
         {!isLoading && (
           <button
             onClick={fetchNarrative}
-            className="text-gray-500 hover:text-fuchsia-400 transition-all p-2 
-                       rounded-lg bg-white/5 hover:bg-white/10 border border-white/5"
+            className="text-gray-500 hover:text-fuchsia-400 transition-all p-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/5"
           >
             <RefreshCw size={14} />
           </button>
         )}
       </div>
 
-      {/* Narrative Body */}
       <div className="relative">
         {isLoading && (
           <div className="flex flex-col items-center gap-3 py-10 justify-center bg-black/10 rounded-xl border border-white/5">
@@ -79,8 +77,7 @@ export default function NarrativeCard() {
         )}
 
         {error && (
-          <div className="bg-red-500/5 border border-red-500/20 text-red-400/80 
-                          px-4 py-3 rounded-xl text-[11px] font-medium flex items-center gap-2">
+          <div className="bg-red-500/5 border border-red-500/20 text-red-400/80 px-4 py-3 rounded-xl text-[11px] font-medium flex items-center gap-2">
             <Sparkles size={12} className="opacity-40" />
             {error}
           </div>
@@ -88,22 +85,12 @@ export default function NarrativeCard() {
 
         {narrative && !isLoading && (
           <div className="prose prose-invert max-w-none">
-            {/* Darker inner box for text focus */}
             <div className="bg-black/20 border border-white/5 p-5 rounded-xl">
               {narrative.split('\n').map((paragraph, i) => {
                 if (paragraph.trim() === '') return null;
-                
-                /* BOLD TEXT: Now highlighted in Fuchsia for better scannability */
-                const formattedText = paragraph.replace(
-                  /\*\*(.*?)\*\*/g, 
-                  '<strong class="text-fuchsia-400 font-bold">$1</strong>'
-                );
-                
+                const formattedText = paragraph.replace(/\*\*(.*?)\*\*/g, '<strong class="text-fuchsia-400 font-bold">$1</strong>');
                 return (
-                  <p
-                    key={i}
-                    /* FONT SIZE: text-[12px] for a refined, compact look */
-                    className="text-gray-400 text-[12px] leading-relaxed mb-3 last:mb-0"
+                  <p key={i} className="text-gray-400 text-[12px] leading-relaxed mb-3 last:mb-0"
                     dangerouslySetInnerHTML={{ __html: formattedText }}
                   />
                 );
@@ -111,11 +98,6 @@ export default function NarrativeCard() {
             </div>
           </div>
         )}
-      </div>
-
-      {/* Decorative Accent */}
-      <div className="mt-6 flex justify-center opacity-20">
-        <div className="h-0.5 w-8 bg-fuchsia-500 rounded-full" />
       </div>
     </motion.div>
   );
