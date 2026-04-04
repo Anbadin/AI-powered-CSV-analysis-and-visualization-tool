@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 import pandas as pd
 import io
 import gc
+import json
 
 load_dotenv()
 
@@ -17,10 +18,17 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# ─── CORS — Allow all origins (you can restrict later) ───
+# ─── CORS — Updated for Production Safety ───
+FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:3000")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allow all for now
+    allow_origins=[
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        FRONTEND_URL,
+        "https://safinia.vercel.app", # Add your specific Vercel URL here
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -53,8 +61,22 @@ async def upload_file(file: UploadFile = File(...)):
         contents = await file.read()
         print(f"📊 File size: {len(contents)} bytes")
         
+        # 1. Read the CSV
         df = pd.read_csv(io.BytesIO(contents))
-        print(f"📋 DataFrame shape: {df.shape}")
+        
+        # ─── NEW: AUTO-CLEANING STEP ───
+        # This fixes the "not detecting columns correctly" issue
+        for col in df.columns:
+            if df[col].dtype == 'object':
+                try:
+                    # Remove currency symbols and commas, then try to make numeric
+                    cleaned_col = df[col].astype(str).str.replace(r'[$,]', '', regex=True)
+                    df[col] = pd.to_numeric(cleaned_col)
+                    print(f"✨ Converted {col} to numeric")
+                except:
+                    continue # Keep as text if it's not a number
+        
+        print(f"📋 DataFrame shape after cleaning: {df.shape}")
 
         if df.empty:
             raise HTTPException(status_code=400, detail="CSV file is empty")
@@ -65,6 +87,8 @@ async def upload_file(file: UploadFile = File(...)):
                 detail="CSV must have at least 2 columns"
             )
 
+        # 2. Pass the DataFrame to analyzer
+        # CRITICAL: Ensure analyze_csv DOES NOT call pd.read_csv() again inside it!
         analysis = analyze_csv(df)
         latest_analysis = analysis
 
@@ -88,6 +112,7 @@ async def upload_file(file: UploadFile = File(...)):
         print(f"❌ Upload error: {e}")
         import traceback
         traceback.print_exc()
+        # This error message is where your console error comes from
         raise HTTPException(status_code=500, detail=f"Analysis failed: {str(e)}")
 
 
@@ -132,5 +157,6 @@ def generate_fallback_narrative(analysis):
 
 if __name__ == "__main__":
     import uvicorn
+    # Use environment variable for port (required for Render/Heroku)
     port = int(os.getenv("PORT", 8000))
-    uvicorn.run("main:app", host="0.0.0.0", port=port, reload=True)
+    uvicorn.run("main:app", host="0.0.0.0", port=port)
